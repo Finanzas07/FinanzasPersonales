@@ -24,8 +24,10 @@ function formatFecha(ts) {
   })
 }
 
-const SESION_KEY    = 'trabajo_sesion_activa'
-const HISTORIAL_KEY = 'trabajo_historial'
+const SESION_KEY        = 'trabajo_sesion_activa'
+const HISTORIAL_KEY     = 'trabajo_historial'
+const META_ACTIVA_KEY   = 'trabajo_meta_activa'
+const META_HISTORIAL_KEY = 'trabajo_meta_historial'
 
 const cargar = (key, fallback) => {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback } catch { return fallback }
@@ -52,6 +54,15 @@ export default function TrabajoEvento() {
   useEffect(() => {
     if (sesion) localStorage.setItem(SESION_KEY, JSON.stringify(sesion))
     else localStorage.removeItem(SESION_KEY)
+  }, [sesion])
+
+  // Sincroniza automáticamente con la vista de Meta
+  useEffect(() => {
+    if (sesion) {
+      localStorage.setItem(META_ACTIVA_KEY, JSON.stringify({ startTime: sesion.startTime, registros: sesion.registros }))
+    } else {
+      localStorage.removeItem(META_ACTIVA_KEY)
+    }
   }, [sesion])
 
   const registros       = sesion?.registros ?? []
@@ -106,10 +117,16 @@ export default function TrabajoEvento() {
 
   const terminarJornada = () => {
     if (sesion && viajesRealizados > 0) {
-      const entrada = { id: Date.now(), fecha: sesion.startTime, horaInicio: sesion.horaInicio, horaFin: sesion.horaFin, meta: sesion.meta, viajesRealizados, totalGanado, registros: sesion.registros }
+      const id = Date.now()
+      const entrada = { id, fecha: sesion.startTime, horaInicio: sesion.horaInicio, horaFin: sesion.horaFin, meta: sesion.meta, viajesRealizados, totalGanado, registros: sesion.registros }
       const nuevo = [entrada, ...historial]
       setHistorial(nuevo)
       localStorage.setItem(HISTORIAL_KEY, JSON.stringify(nuevo))
+
+      // Guarda también en el historial de Meta
+      const metaHistorial = cargar(META_HISTORIAL_KEY, [])
+      const metaEntrada = { id, fecha: sesion.startTime, viajesRealizados, totalGanado, registros: sesion.registros }
+      localStorage.setItem(META_HISTORIAL_KEY, JSON.stringify([metaEntrada, ...metaHistorial]))
     }
     setSesion(null)
     setForm({ meta: '', horaInicio: '', horaFin: '' })
