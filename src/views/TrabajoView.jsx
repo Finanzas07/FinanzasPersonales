@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Pencil, Check, X as XIcon } from 'lucide-react'
+import { Pencil, Check, X as XIcon, ChevronDown, ChevronUp } from 'lucide-react'
 import './TrabajoView.css'
 
 function formatCountdown(seconds) {
@@ -15,28 +15,55 @@ function formatHora(ts) {
   return new Date(ts).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 }
 
+function formatFecha(ts) {
+  return new Date(ts).toLocaleDateString('es-MX', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  })
+}
+
+const SESION_KEY = 'trabajo_sesion_activa'
+const HISTORIAL_KEY = 'trabajo_historial'
+
+function cargarSesion() {
+  try { return JSON.parse(localStorage.getItem(SESION_KEY)) } catch { return null }
+}
+
+function cargarHistorial() {
+  try { return JSON.parse(localStorage.getItem(HISTORIAL_KEY)) || [] } catch { return [] }
+}
+
 export default function TrabajoView() {
-  const [sesion, setSesion] = useState(null)
+  const [sesion, setSesion] = useState(cargarSesion)
+  const [historial, setHistorial] = useState(cargarHistorial)
   const [form, setForm] = useState({ meta: '', horaInicio: '', horaFin: '' })
   const [mostrarModal, setMostrarModal] = useState(false)
   const [monto, setMonto] = useState('')
   const [now, setNow] = useState(Date.now())
   const [editandoId, setEditandoId] = useState(null)
   const [montoEdicion, setMontoEdicion] = useState('')
+  const [historialAbierto, setHistorialAbierto] = useState(null)
 
+  // Tick cada segundo cuando hay sesión activa
   useEffect(() => {
     if (!sesion) return
     const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [!!sesion])
 
-  // Derivados desde registros
+  // Persistir sesión en localStorage cuando cambia
+  useEffect(() => {
+    if (sesion) localStorage.setItem(SESION_KEY, JSON.stringify(sesion))
+    else localStorage.removeItem(SESION_KEY)
+  }, [sesion])
+
+  // Derivados
   const registros = sesion?.registros ?? []
-  const totalGanado = registros.reduce((sum, r) => sum + r.monto, 0)
+  const totalGanado = registros.reduce((s, r) => s + r.monto, 0)
   const viajesRealizados = registros.length
   const tiempoGlobal = sesion ? Math.max(0, Math.round((sesion.endTime - now) / 1000)) : 0
   const tiempoViaje = sesion ? Math.max(0, Math.round((sesion.tripEndTime - now) / 1000)) : 0
   const viajesFaltantes = sesion ? Math.max(0, sesion.meta - viajesRealizados) : 0
+  const jornadaTerminada = sesion && (tiempoGlobal === 0 || viajesFaltantes === 0)
 
   const iniciarJornada = () => {
     const { meta, horaInicio, horaFin } = form
@@ -47,10 +74,8 @@ export default function TrabajoView() {
     const [hF, mF] = horaFin.split(':').map(Number)
 
     const hoy = new Date()
-    const inicio = new Date(hoy)
-    inicio.setHours(hI, mI, 0, 0)
-    const fin = new Date(hoy)
-    fin.setHours(hF, mF, 0, 0)
+    const inicio = new Date(hoy); inicio.setHours(hI, mI, 0, 0)
+    const fin = new Date(hoy); fin.setHours(hF, mF, 0, 0)
     if (fin <= inicio) fin.setDate(fin.getDate() + 1)
 
     const totalMs = fin - inicio
@@ -59,8 +84,11 @@ export default function TrabajoView() {
 
     setSesion({
       meta: metaNum,
+      horaInicio,
+      horaFin,
       tiempoPorViajeMs,
       registros: [],
+      startTime: ahora,
       endTime: fin.getTime(),
       tripEndTime: ahora + tiempoPorViajeMs,
     })
@@ -79,11 +107,6 @@ export default function TrabajoView() {
     setMostrarModal(false)
   }
 
-  const iniciarEdicion = (registro) => {
-    setEditandoId(registro.id)
-    setMontoEdicion(String(registro.monto))
-  }
-
   const guardarEdicion = (id) => {
     const nuevoMonto = parseFloat(montoEdicion) || 0
     setSesion(prev => ({
@@ -91,22 +114,152 @@ export default function TrabajoView() {
       registros: prev.registros.map(r => r.id === id ? { ...r, monto: nuevoMonto } : r),
     }))
     setEditandoId(null)
-    setMontoEdicion('')
-  }
-
-  const cancelarEdicion = () => {
-    setEditandoId(null)
-    setMontoEdicion('')
   }
 
   const terminarJornada = () => {
+    if (sesion && viajesRealizados > 0) {
+      const entrada = {
+        id: Date.now(),
+        fecha: sesion.startTime,
+        horaInicio: sesion.horaInicio,
+        horaFin: sesion.horaFin,
+        meta: sesion.meta,
+        viajesRealizados,
+        totalGanado,
+        registros: sesion.registros,
+      }
+      const nuevo = [entrada, ...historial]
+      setHistorial(nuevo)
+      localStorage.setItem(HISTORIAL_KEY, JSON.stringify(nuevo))
+    }
     setSesion(null)
     setForm({ meta: '', horaInicio: '', horaFin: '' })
   }
 
-  // --- Pantalla de configuración ---
-  if (!sesion) {
+  // ── Dashboard activo ──
+  if (sesion) {
+    const tiempoPorViajeMins = Math.round(sesion.tiempoPorViajeMs / 60000)
+
     return (
+      <div className="trabajo-dashboard">
+
+        {jornadaTerminada && (
+          <div className="trabajo-banner-fin">
+            {viajesFaltantes === 0 ? '🎉 ¡Meta alcanzada!' : '⏰ Tiempo terminado'} —
+            Ganaste ${totalGanado.toLocaleString('es-MX', { minimumFractionDigits: 2 })} en {viajesRealizados} viajes
+          </div>
+        )}
+
+        <div className="trabajo-metricas">
+          <div className="trabajo-metrica">
+            <span className="trabajo-metrica-label">Viajes faltantes</span>
+            <span className="trabajo-metrica-valor">{viajesFaltantes}</span>
+            <span className="trabajo-metrica-sub">de {sesion.meta} meta</span>
+          </div>
+          <div className="trabajo-metrica trabajo-metrica-dinero">
+            <span className="trabajo-metrica-label">Total ganado</span>
+            <span className="trabajo-metrica-valor">
+              ${totalGanado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+            </span>
+            <span className="trabajo-metrica-sub">{viajesRealizados} viajes realizados</span>
+          </div>
+        </div>
+
+        <div className="trabajo-timers">
+          <div className="trabajo-timer">
+            <span className="trabajo-timer-label">Tiempo de jornada</span>
+            <span className={`trabajo-timer-valor ${tiempoGlobal < 300 ? 'urgente' : ''}`}>
+              {formatCountdown(tiempoGlobal)}
+            </span>
+          </div>
+          <div className="trabajo-timer trabajo-timer-viaje">
+            <span className="trabajo-timer-label">Tiempo por viaje</span>
+            <span className={`trabajo-timer-valor ${tiempoViaje < 60 ? 'urgente' : ''}`}>
+              {formatCountdown(tiempoViaje)}
+            </span>
+            <span className="trabajo-timer-sub">objetivo: {tiempoPorViajeMins} min/viaje</span>
+          </div>
+        </div>
+
+        <button
+          className="trabajo-btn-registrar"
+          onClick={() => setMostrarModal(true)}
+          disabled={viajesFaltantes <= 0}
+        >
+          + Registrar Viaje
+        </button>
+
+        {registros.length > 0 && (
+          <div className="trabajo-historial">
+            <p className="trabajo-historial-titulo">Viajes registrados</p>
+            <div className="trabajo-historial-lista">
+              {[...registros].reverse().map((r, i) => (
+                <div key={r.id} className="trabajo-historial-item">
+                  <div className="trabajo-historial-info">
+                    <span className="trabajo-historial-num">Viaje {viajesRealizados - i}</span>
+                    <span className="trabajo-historial-hora">{formatHora(r.hora)}</span>
+                  </div>
+                  {editandoId === r.id ? (
+                    <div className="trabajo-historial-edicion">
+                      <span className="trabajo-historial-peso">$</span>
+                      <input
+                        className="trabajo-historial-input"
+                        type="number" min="0" step="0.50"
+                        value={montoEdicion} autoFocus
+                        onChange={e => setMontoEdicion(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') guardarEdicion(r.id)
+                          if (e.key === 'Escape') setEditandoId(null)
+                        }}
+                      />
+                      <button className="trabajo-historial-btn guardar" onClick={() => guardarEdicion(r.id)}><Check size={14} /></button>
+                      <button className="trabajo-historial-btn cancelar" onClick={() => setEditandoId(null)}><XIcon size={14} /></button>
+                    </div>
+                  ) : (
+                    <div className="trabajo-historial-monto-row">
+                      <span className="trabajo-historial-monto">
+                        ${r.monto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </span>
+                      <button className="trabajo-historial-btn editar" onClick={() => { setEditandoId(r.id); setMontoEdicion(String(r.monto)) }}>
+                        <Pencil size={13} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button className="trabajo-btn-terminar" onClick={terminarJornada}>
+          Terminar Jornada
+        </button>
+
+        {mostrarModal && (
+          <div className="trabajo-modal-overlay" onClick={() => setMostrarModal(false)}>
+            <div className="trabajo-modal" onClick={e => e.stopPropagation()}>
+              <h3>Registrar Viaje</h3>
+              <p>¿Cuánto ganaste en este viaje?</p>
+              <input
+                type="number" min="0" step="0.50" placeholder="$ 0.00"
+                value={monto} autoFocus
+                onChange={e => setMonto(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && registrarViaje()}
+              />
+              <div className="trabajo-modal-btns">
+                <button className="trabajo-modal-cancel" onClick={() => setMostrarModal(false)}>Cancelar</button>
+                <button className="trabajo-modal-confirm" onClick={registrarViaje}>Confirmar</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── Pantalla sin sesión activa ──
+  return (
+    <div className="trabajo-wrap">
       <div className="trabajo-config">
         <div className="trabajo-config-icon">🚗</div>
         <h2>Configurar Jornada</h2>
@@ -115,31 +268,19 @@ export default function TrabajoView() {
         <div className="trabajo-form">
           <div className="trabajo-field">
             <label>Meta de viajes</label>
-            <input
-              type="number"
-              min="1"
-              placeholder="Ej: 12"
-              value={form.meta}
-              onChange={e => setForm(f => ({ ...f, meta: e.target.value }))}
-            />
+            <input type="number" min="1" placeholder="Ej: 12" value={form.meta}
+              onChange={e => setForm(f => ({ ...f, meta: e.target.value }))} />
           </div>
-
           <div className="trabajo-field-row">
             <div className="trabajo-field">
               <label>Hora de inicio</label>
-              <input
-                type="time"
-                value={form.horaInicio}
-                onChange={e => setForm(f => ({ ...f, horaInicio: e.target.value }))}
-              />
+              <input type="time" value={form.horaInicio}
+                onChange={e => setForm(f => ({ ...f, horaInicio: e.target.value }))} />
             </div>
             <div className="trabajo-field">
               <label>Hora de fin</label>
-              <input
-                type="time"
-                value={form.horaFin}
-                onChange={e => setForm(f => ({ ...f, horaFin: e.target.value }))}
-              />
+              <input type="time" value={form.horaFin}
+                onChange={e => setForm(f => ({ ...f, horaFin: e.target.value }))} />
             </div>
           </div>
 
@@ -158,154 +299,48 @@ export default function TrabajoView() {
             )
           })()}
 
-          <button
-            className="trabajo-btn-iniciar"
-            onClick={iniciarJornada}
-            disabled={!form.meta || !form.horaInicio || !form.horaFin}
-          >
+          <button className="trabajo-btn-iniciar" onClick={iniciarJornada}
+            disabled={!form.meta || !form.horaInicio || !form.horaFin}>
             Iniciar Jornada
           </button>
         </div>
       </div>
-    )
-  }
 
-  // --- Dashboard activo ---
-  const tiempoPorViajeMins = Math.round(sesion.tiempoPorViajeMs / 60000)
-  const jornadaTerminada = tiempoGlobal === 0 || viajesFaltantes === 0
+      {/* Historial de jornadas */}
+      {historial.length > 0 && (
+        <div className="trabajo-jornadas">
+          <p className="trabajo-jornadas-titulo">Historial de jornadas</p>
 
-  return (
-    <div className="trabajo-dashboard">
-
-      {jornadaTerminada && (
-        <div className="trabajo-banner-fin">
-          {viajesFaltantes === 0 ? '🎉 ¡Meta alcanzada!' : '⏰ Tiempo terminado'} —
-          Ganaste ${totalGanado.toLocaleString('es-MX', { minimumFractionDigits: 2 })} en {viajesRealizados} viajes
-        </div>
-      )}
-
-      {/* Métricas */}
-      <div className="trabajo-metricas">
-        <div className="trabajo-metrica">
-          <span className="trabajo-metrica-label">Viajes faltantes</span>
-          <span className="trabajo-metrica-valor">{viajesFaltantes}</span>
-          <span className="trabajo-metrica-sub">de {sesion.meta} meta</span>
-        </div>
-        <div className="trabajo-metrica trabajo-metrica-dinero">
-          <span className="trabajo-metrica-label">Total ganado</span>
-          <span className="trabajo-metrica-valor">
-            ${totalGanado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-          </span>
-          <span className="trabajo-metrica-sub">{viajesRealizados} viajes realizados</span>
-        </div>
-      </div>
-
-      {/* Temporizadores */}
-      <div className="trabajo-timers">
-        <div className="trabajo-timer">
-          <span className="trabajo-timer-label">Tiempo de jornada</span>
-          <span className={`trabajo-timer-valor ${tiempoGlobal < 300 ? 'urgente' : ''}`}>
-            {formatCountdown(tiempoGlobal)}
-          </span>
-        </div>
-        <div className="trabajo-timer trabajo-timer-viaje">
-          <span className="trabajo-timer-label">Tiempo por viaje</span>
-          <span className={`trabajo-timer-valor ${tiempoViaje < 60 ? 'urgente' : ''}`}>
-            {formatCountdown(tiempoViaje)}
-          </span>
-          <span className="trabajo-timer-sub">objetivo: {tiempoPorViajeMins} min/viaje</span>
-        </div>
-      </div>
-
-      {/* Botón registrar */}
-      <button
-        className="trabajo-btn-registrar"
-        onClick={() => setMostrarModal(true)}
-        disabled={viajesFaltantes <= 0}
-      >
-        + Registrar Viaje
-      </button>
-
-      {/* Lista de viajes */}
-      {registros.length > 0 && (
-        <div className="trabajo-historial">
-          <p className="trabajo-historial-titulo">Viajes registrados</p>
-          <div className="trabajo-historial-lista">
-            {[...registros].reverse().map((r, i) => (
-              <div key={r.id} className="trabajo-historial-item">
-                <div className="trabajo-historial-info">
-                  <span className="trabajo-historial-num">Viaje {viajesRealizados - i}</span>
-                  <span className="trabajo-historial-hora">{formatHora(r.hora)}</span>
+          {historial.map(j => (
+            <div key={j.id} className="trabajo-jornada-card">
+              <div className="trabajo-jornada-header" onClick={() => setHistorialAbierto(historialAbierto === j.id ? null : j.id)}>
+                <div className="trabajo-jornada-info">
+                  <span className="trabajo-jornada-fecha">{formatFecha(j.fecha)}</span>
+                  <span className="trabajo-jornada-horario">{j.horaInicio} – {j.horaFin}</span>
                 </div>
-
-                {editandoId === r.id ? (
-                  <div className="trabajo-historial-edicion">
-                    <span className="trabajo-historial-peso">$</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.50"
-                      value={montoEdicion}
-                      autoFocus
-                      onChange={e => setMontoEdicion(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') guardarEdicion(r.id)
-                        if (e.key === 'Escape') cancelarEdicion()
-                      }}
-                      className="trabajo-historial-input"
-                    />
-                    <button className="trabajo-historial-btn guardar" onClick={() => guardarEdicion(r.id)}>
-                      <Check size={14} />
-                    </button>
-                    <button className="trabajo-historial-btn cancelar" onClick={cancelarEdicion}>
-                      <XIcon size={14} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="trabajo-historial-monto-row">
-                    <span className="trabajo-historial-monto">
-                      ${r.monto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                    </span>
-                    <button className="trabajo-historial-btn editar" onClick={() => iniciarEdicion(r)}>
-                      <Pencil size={13} />
-                    </button>
-                  </div>
-                )}
+                <div className="trabajo-jornada-resumen">
+                  <span className="trabajo-jornada-ganado">
+                    ${j.totalGanado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </span>
+                  <span className="trabajo-jornada-viajes">{j.viajesRealizados}/{j.meta} viajes</span>
+                  {historialAbierto === j.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      <button className="trabajo-btn-terminar" onClick={terminarJornada}>
-        Terminar Jornada
-      </button>
-
-      {/* Modal registro */}
-      {mostrarModal && (
-        <div className="trabajo-modal-overlay" onClick={() => setMostrarModal(false)}>
-          <div className="trabajo-modal" onClick={e => e.stopPropagation()}>
-            <h3>Registrar Viaje</h3>
-            <p>¿Cuánto ganaste en este viaje?</p>
-            <input
-              type="number"
-              min="0"
-              step="0.50"
-              placeholder="$ 0.00"
-              value={monto}
-              autoFocus
-              onChange={e => setMonto(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && registrarViaje()}
-            />
-            <div className="trabajo-modal-btns">
-              <button className="trabajo-modal-cancel" onClick={() => setMostrarModal(false)}>
-                Cancelar
-              </button>
-              <button className="trabajo-modal-confirm" onClick={registrarViaje}>
-                Confirmar
-              </button>
+              {historialAbierto === j.id && (
+                <div className="trabajo-jornada-detalle">
+                  {j.registros.map((r, i) => (
+                    <div key={r.id} className="trabajo-jornada-viaje">
+                      <span>Viaje {i + 1} — {formatHora(r.hora)}</span>
+                      <span className="trabajo-jornada-viaje-monto">
+                        ${r.monto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          ))}
         </div>
       )}
     </div>
