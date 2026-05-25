@@ -77,7 +77,7 @@ export default function TrabajoEvento() {
     const totalMs = fin - inicio
     const tiempoPorViajeMs = totalMs / metaNum
     const ahora = Date.now()
-    setSesion({ meta: metaNum, horaInicio, horaFin, tiempoPorViajeMs, registros: [], startTime: ahora, endTime: fin.getTime(), tripEndTime: ahora + tiempoPorViajeMs })
+    setSesion({ meta: metaNum, horaInicio, horaFin, tiempoPorViajeMs, registros: [], startTime: ahora, endTime: ahora + totalMs, tripEndTime: ahora + tiempoPorViajeMs })
     setNow(ahora)
     // Si no hay meta activa, crear una vacía
     if (!localStorage.getItem(META_ACTIVA_KEY)) {
