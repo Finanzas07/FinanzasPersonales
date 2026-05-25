@@ -1,0 +1,495 @@
+/* ── Configuración ── */
+.trabajo-config {
+  max-width: 460px;
+  margin: 48px auto;
+  text-align: center;
+}
+
+.trabajo-config-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.trabajo-config h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin-bottom: 4px;
+}
+
+.trabajo-config-sub {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-bottom: 28px;
+}
+
+.trabajo-form {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  text-align: left;
+}
+
+.trabajo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trabajo-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.trabajo-field input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s;
+  background: #f9fafb;
+}
+
+.trabajo-field input:focus {
+  border-color: #1a56db;
+  background: #fff;
+}
+
+.trabajo-field-row {
+  display: flex;
+  gap: 12px;
+}
+
+.trabajo-field-row .trabajo-field {
+  flex: 1;
+}
+
+.trabajo-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #eff6ff;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.85rem;
+  color: #1a56db;
+  font-weight: 500;
+}
+
+.trabajo-btn-iniciar {
+  background: #1a56db;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.trabajo-btn-iniciar:hover:not(:disabled) {
+  background: #1447b7;
+}
+
+.trabajo-btn-iniciar:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Dashboard ── */
+.trabajo-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.trabajo-banner-fin {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #15803d;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Métricas */
+.trabajo-metricas {
+  display: flex;
+  gap: 14px;
+}
+
+.trabajo-metrica {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.trabajo-metrica-dinero {
+  border-color: #16a34a;
+  border-width: 2px;
+}
+
+.trabajo-metrica-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.trabajo-metrica-valor {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #1e3a5f;
+  line-height: 1;
+}
+
+.trabajo-metrica-dinero .trabajo-metrica-valor {
+  color: #16a34a;
+  font-size: 2rem;
+}
+
+.trabajo-metrica-sub {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  margin-top: 6px;
+}
+
+/* Temporizadores */
+.trabajo-timers {
+  display: flex;
+  gap: 14px;
+}
+
+.trabajo-timer {
+  flex: 1;
+  background: #1e3a5f;
+  color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.trabajo-timer-viaje {
+  background: #1a56db;
+}
+
+.trabajo-timer-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.65;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.trabajo-timer-valor {
+  font-size: 3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.trabajo-timer-valor.urgente {
+  color: #fca5a5;
+  animation: pulso 1s ease-in-out infinite;
+}
+
+@keyframes pulso {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.trabajo-timer-sub {
+  font-size: 0.75rem;
+  opacity: 0.55;
+  margin-top: 6px;
+}
+
+/* Botones */
+.trabajo-btn-registrar {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  letter-spacing: 0.02em;
+}
+
+.trabajo-btn-registrar:hover:not(:disabled) {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.trabajo-btn-registrar:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.trabajo-btn-terminar {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.trabajo-btn-terminar:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+/* Modal */
+.trabajo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.trabajo-modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.trabajo-modal h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.trabajo-modal p {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-top: -6px;
+}
+
+.trabajo-modal input {
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 1.4rem;
+  text-align: center;
+  outline: none;
+  font-weight: 700;
+  color: #1e3a5f;
+  transition: border-color 0.15s;
+}
+
+.trabajo-modal input:focus {
+  border-color: #1a56db;
+}
+
+.trabajo-modal-btns {
+  display: flex;
+  gap: 10px;
+}
+
+.trabajo-modal-cancel {
+  flex: 1;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  padding: 11px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: #374151;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.trabajo-modal-cancel:hover {
+  background: #e5e7eb;
+}
+
+.trabajo-modal-confirm {
+  flex: 1;
+  background: #1a56db;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 11px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.trabajo-modal-confirm:hover {
+  background: #1447b7;
+}
+
+/* ── Historial de viajes ── */
+.trabajo-historial {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.trabajo-historial-titulo {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.trabajo-historial-lista {
+  display: flex;
+  flex-direction: column;
+}
+
+.trabajo-historial-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  border-bottom: 1px solid #f9fafb;
+  transition: background 0.1s;
+}
+
+.trabajo-historial-item:last-child {
+  border-bottom: none;
+}
+
+.trabajo-historial-item:hover {
+  background: #fafafa;
+}
+
+.trabajo-historial-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trabajo-historial-num {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.trabajo-historial-hora {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.trabajo-historial-monto-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trabajo-historial-monto {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+/* Edición inline */
+.trabajo-historial-edicion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trabajo-historial-peso {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.trabajo-historial-input {
+  width: 90px;
+  border: 1.5px solid #1a56db;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  outline: none;
+  text-align: right;
+}
+
+/* Botones del historial */
+.trabajo-historial-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.trabajo-historial-btn.editar {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.trabajo-historial-btn.editar:hover {
+  background: #e0e7ff;
+  color: #1a56db;
+}
+
+.trabajo-historial-btn.guardar {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.trabajo-historial-btn.guardar:hover {
+  background: #bbf7d0;
+}
+
+.trabajo-historial-btn.cancelar {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.trabajo-historial-btn.cancelar:hover {
+  background: #fecaca;
+}
