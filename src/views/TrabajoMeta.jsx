@@ -20,12 +20,12 @@ const cargar = (key, fallback) => {
 }
 
 export default function TrabajoMeta() {
-  const [metaActiva, setMetaActiva]       = useState(() => cargar(META_ACTIVA_KEY, null))
-  const [historial, setHistorial]         = useState(() => cargar(META_HISTORIAL_KEY, []))
-  const [mostrarModal, setMostrarModal]   = useState(false)
-  const [monto, setMonto]                 = useState('')
-  const [editandoId, setEditandoId]       = useState(null)
-  const [montoEdicion, setMontoEdicion]   = useState('')
+  const [metaActiva, setMetaActiva]             = useState(() => cargar(META_ACTIVA_KEY, null))
+  const [historial, setHistorial]               = useState(() => cargar(META_HISTORIAL_KEY, []))
+  const [modalTipo, setModalTipo]               = useState(null) // 'viaje' | 'propina' | null
+  const [monto, setMonto]                       = useState('')
+  const [editandoId, setEditandoId]             = useState(null)
+  const [montoEdicion, setMontoEdicion]         = useState('')
   const [historialAbierto, setHistorialAbierto] = useState(null)
   const [confirmEliminar, setConfirmEliminar]   = useState(null)
 
@@ -34,23 +34,39 @@ export default function TrabajoMeta() {
     else localStorage.removeItem(META_ACTIVA_KEY)
   }, [metaActiva])
 
-  const registros       = metaActiva?.registros ?? []
-  const totalGanado     = registros.reduce((s, r) => s + r.monto, 0)
-  const viajesRealizados = registros.length
+  const registros        = metaActiva?.registros ?? []
+  const totalGanado      = registros.reduce((s, r) => s + r.monto, 0)
+  const viajesRealizados = registros.filter(r => r.tipo !== 'propina').length
+
+  // Asigna número de viaje a cada registro (propinas no llevan número)
+  let viajeContador = 0
+  const registrosConNum = registros.map(r => {
+    if (r.tipo !== 'propina') viajeContador++
+    return { ...r, viajeNum: r.tipo !== 'propina' ? viajeContador : null }
+  })
 
   const nuevaMeta = () => {
     setMetaActiva({ startTime: Date.now(), registros: [] })
   }
 
-  const registrarViaje = () => {
+  const abrirModal = (tipo) => {
+    setMonto('')
+    setModalTipo(tipo)
+  }
+
+  const cerrarModal = () => {
+    setModalTipo(null)
+    setMonto('')
+  }
+
+  const registrarMovimiento = () => {
     const montoNum = parseFloat(monto) || 0
     const ahora = Date.now()
     setMetaActiva(prev => ({
       ...prev,
-      registros: [...prev.registros, { id: ahora, monto: montoNum, hora: ahora }],
+      registros: [...prev.registros, { id: ahora, monto: montoNum, hora: ahora, tipo: modalTipo }],
     }))
-    setMonto('')
-    setMostrarModal(false)
+    cerrarModal()
   }
 
   const guardarEdicion = (id) => {
@@ -62,7 +78,7 @@ export default function TrabajoMeta() {
   }
 
   const terminarMeta = () => {
-    if (metaActiva && viajesRealizados > 0) {
+    if (metaActiva && registros.length > 0) {
       const entrada = { id: Date.now(), fecha: metaActiva.startTime, viajesRealizados, totalGanado, registros }
       const nuevo = [entrada, ...historial]
       setHistorial(nuevo)
@@ -96,18 +112,26 @@ export default function TrabajoMeta() {
           </div>
         </div>
 
-        <button className="trabajo-btn-registrar" onClick={() => setMostrarModal(true)}>
-          + Registrar Viaje
-        </button>
+        <div className="meta-btns-row">
+          <button className="trabajo-btn-registrar" onClick={() => abrirModal('viaje')}>
+            + Registrar Viaje
+          </button>
+          <button className="meta-btn-propina" onClick={() => abrirModal('propina')}>
+            + Propina
+          </button>
+        </div>
 
         {registros.length > 0 && (
           <div className="trabajo-historial">
-            <p className="trabajo-historial-titulo">Viajes registrados</p>
+            <p className="trabajo-historial-titulo">Movimientos</p>
             <div className="trabajo-historial-lista">
-              {[...registros].reverse().map((r, i) => (
+              {[...registrosConNum].reverse().map(r => (
                 <div key={r.id} className="trabajo-historial-item">
                   <div className="trabajo-historial-info">
-                    <span className="trabajo-historial-num">Viaje {viajesRealizados - i}</span>
+                    {r.tipo === 'propina'
+                      ? <span className="trabajo-historial-num meta-label-propina">Propina</span>
+                      : <span className="trabajo-historial-num">Viaje {r.viajeNum}</span>
+                    }
                     <span className="trabajo-historial-hora">{formatHora(r.hora)}</span>
                   </div>
                   {editandoId === r.id ? (
@@ -122,7 +146,7 @@ export default function TrabajoMeta() {
                     </div>
                   ) : (
                     <div className="trabajo-historial-monto-row">
-                      <span className="trabajo-historial-monto">
+                      <span className={`trabajo-historial-monto ${r.tipo === 'propina' ? 'meta-monto-propina' : ''}`}>
                         ${r.monto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </span>
                       <button className="trabajo-historial-btn editar" onClick={() => { setEditandoId(r.id); setMontoEdicion(String(r.monto)) }}>
@@ -140,18 +164,23 @@ export default function TrabajoMeta() {
           Terminar Meta
         </button>
 
-        {mostrarModal && (
-          <div className="trabajo-modal-overlay" onClick={() => setMostrarModal(false)}>
+        {modalTipo && (
+          <div className="trabajo-modal-overlay" onClick={cerrarModal}>
             <div className="trabajo-modal" onClick={e => e.stopPropagation()}>
-              <h3>Registrar Viaje</h3>
-              <p>¿Cuánto ganaste en este viaje?</p>
+              <h3>{modalTipo === 'propina' ? 'Registrar Propina' : 'Registrar Viaje'}</h3>
+              <p>{modalTipo === 'propina' ? '¿Cuánto recibiste de propina?' : '¿Cuánto ganaste en este viaje?'}</p>
               <input type="number" min="0" step="0.50" placeholder="$ 0.00"
                 value={monto} autoFocus
                 onChange={e => setMonto(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && registrarViaje()} />
+                onKeyDown={e => e.key === 'Enter' && registrarMovimiento()} />
               <div className="trabajo-modal-btns">
-                <button className="trabajo-modal-cancel" onClick={() => setMostrarModal(false)}>Cancelar</button>
-                <button className="trabajo-modal-confirm" onClick={registrarViaje}>Confirmar</button>
+                <button className="trabajo-modal-cancel" onClick={cerrarModal}>Cancelar</button>
+                <button
+                  className={`trabajo-modal-confirm ${modalTipo === 'propina' ? 'meta-modal-propina' : ''}`}
+                  onClick={registrarMovimiento}
+                >
+                  Confirmar
+                </button>
               </div>
             </div>
           </div>
@@ -175,49 +204,60 @@ export default function TrabajoMeta() {
       {historial.length > 0 && (
         <div className="trabajo-jornadas">
           <p className="trabajo-jornadas-titulo">Historial de metas</p>
-          {historial.map(m => (
-            <div key={m.id} className="trabajo-jornada-card">
-              <div className="trabajo-jornada-header" onClick={() => setHistorialAbierto(historialAbierto === m.id ? null : m.id)}>
-                <div className="trabajo-jornada-info">
-                  <span className="trabajo-jornada-fecha">{formatFecha(m.fecha)}</span>
-                  <span className="trabajo-jornada-horario">{formatHora(m.fecha)}</span>
+          {historial.map(m => {
+            // Numeración para el detalle del historial
+            let vc = 0
+            const regsConNum = m.registros.map(r => {
+              if (r.tipo !== 'propina') vc++
+              return { ...r, viajeNum: r.tipo !== 'propina' ? vc : null }
+            })
+            return (
+              <div key={m.id} className="trabajo-jornada-card">
+                <div className="trabajo-jornada-header" onClick={() => setHistorialAbierto(historialAbierto === m.id ? null : m.id)}>
+                  <div className="trabajo-jornada-info">
+                    <span className="trabajo-jornada-fecha">{formatFecha(m.fecha)}</span>
+                    <span className="trabajo-jornada-horario">{formatHora(m.fecha)}</span>
+                  </div>
+                  <div className="trabajo-jornada-resumen">
+                    <span className="trabajo-jornada-ganado">
+                      ${m.totalGanado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    </span>
+                    <span className="trabajo-jornada-viajes">{m.viajesRealizados} viajes</span>
+                    {historialAbierto === m.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </div>
                 </div>
-                <div className="trabajo-jornada-resumen">
-                  <span className="trabajo-jornada-ganado">
-                    ${m.totalGanado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                  </span>
-                  <span className="trabajo-jornada-viajes">{m.viajesRealizados} viajes</span>
-                  {historialAbierto === m.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </div>
-              </div>
 
-              {historialAbierto === m.id && (
-                <div className="trabajo-jornada-detalle">
-                  {m.registros.map((r, i) => (
-                    <div key={r.id} className="trabajo-jornada-viaje">
-                      <span>Viaje {i + 1} — {formatHora(r.hora)}</span>
-                      <span className="trabajo-jornada-viaje-monto">
-                        ${r.monto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  ))}
-                  {confirmEliminar === m.id ? (
-                    <div className="trabajo-jornada-confirm">
-                      <span>¿Eliminar esta meta?</span>
-                      <div className="trabajo-jornada-confirm-btns">
-                        <button className="trabajo-jornada-btn-cancel" onClick={() => setConfirmEliminar(null)}>No</button>
-                        <button className="trabajo-jornada-btn-delete" onClick={() => eliminarMeta(m.id)}>Sí, eliminar</button>
+                {historialAbierto === m.id && (
+                  <div className="trabajo-jornada-detalle">
+                    {regsConNum.map(r => (
+                      <div key={r.id} className="trabajo-jornada-viaje">
+                        <span>
+                          {r.tipo === 'propina' ? 'Propina' : `Viaje ${r.viajeNum}`}
+                          {' — '}{formatHora(r.hora)}
+                        </span>
+                        <span className={`trabajo-jornada-viaje-monto ${r.tipo === 'propina' ? 'meta-monto-propina' : ''}`}>
+                          ${r.monto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </span>
                       </div>
-                    </div>
-                  ) : (
-                    <button className="trabajo-jornada-btn-eliminar" onClick={e => { e.stopPropagation(); setConfirmEliminar(m.id) }}>
-                      <Trash2 size={13} /> Eliminar meta
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+                    ))}
+                    {confirmEliminar === m.id ? (
+                      <div className="trabajo-jornada-confirm">
+                        <span>¿Eliminar esta meta?</span>
+                        <div className="trabajo-jornada-confirm-btns">
+                          <button className="trabajo-jornada-btn-cancel" onClick={() => setConfirmEliminar(null)}>No</button>
+                          <button className="trabajo-jornada-btn-delete" onClick={() => eliminarMeta(m.id)}>Sí, eliminar</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button className="trabajo-jornada-btn-eliminar" onClick={e => { e.stopPropagation(); setConfirmEliminar(m.id) }}>
+                        <Trash2 size={13} /> Eliminar meta
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

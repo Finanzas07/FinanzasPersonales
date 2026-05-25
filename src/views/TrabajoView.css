@@ -753,6 +753,51 @@
   background: #b91c1c;
 }
 
+/* ── META: botones y propina ── */
+.meta-btns-row {
+  display: flex;
+  gap: 10px;
+}
+
+.meta-btns-row .trabajo-btn-registrar {
+  flex: 1;
+}
+
+.meta-btn-propina {
+  flex: 0 0 auto;
+  background: #f59e0b;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.meta-btn-propina:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+}
+
+.meta-label-propina {
+  color: #d97706 !important;
+}
+
+.meta-monto-propina {
+  color: #d97706 !important;
+}
+
+.meta-modal-propina {
+  background: #f59e0b !important;
+}
+
+.meta-modal-propina:hover {
+  background: #d97706 !important;
+}
+
 /* ── GANANCIAS ── */
 .gan-card {
   background: #fff;
