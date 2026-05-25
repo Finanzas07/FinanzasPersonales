@@ -24,10 +24,9 @@ function formatFecha(ts) {
   })
 }
 
-const SESION_KEY        = 'trabajo_sesion_activa'
-const HISTORIAL_KEY     = 'trabajo_historial'
-const META_ACTIVA_KEY   = 'trabajo_meta_activa'
-const META_HISTORIAL_KEY = 'trabajo_meta_historial'
+const SESION_KEY      = 'trabajo_sesion_activa'
+const HISTORIAL_KEY   = 'trabajo_historial'
+const META_ACTIVA_KEY = 'trabajo_meta_activa'
 
 const cargar = (key, fallback) => {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback } catch { return fallback }
@@ -56,14 +55,6 @@ export default function TrabajoEvento() {
     else localStorage.removeItem(SESION_KEY)
   }, [sesion])
 
-  // Sincroniza automáticamente con la vista de Meta
-  useEffect(() => {
-    if (sesion) {
-      localStorage.setItem(META_ACTIVA_KEY, JSON.stringify({ startTime: sesion.startTime, registros: sesion.registros }))
-    } else {
-      localStorage.removeItem(META_ACTIVA_KEY)
-    }
-  }, [sesion])
 
   const registros       = sesion?.registros ?? []
   const totalGanado     = registros.reduce((s, r) => s + r.monto, 0)
@@ -88,22 +79,44 @@ export default function TrabajoEvento() {
     const ahora = Date.now()
     setSesion({ meta: metaNum, horaInicio, horaFin, tiempoPorViajeMs, registros: [], startTime: ahora, endTime: fin.getTime(), tripEndTime: ahora + tiempoPorViajeMs })
     setNow(ahora)
+    // Si no hay meta activa, crear una vacía
+    if (!localStorage.getItem(META_ACTIVA_KEY)) {
+      localStorage.setItem(META_ACTIVA_KEY, JSON.stringify({ startTime: ahora, registros: [] }))
+    }
   }
 
   const registrarViaje = () => {
     const montoNum = parseFloat(monto) || 0
     const ahora = Date.now()
+    const nuevoViaje = { id: ahora, monto: montoNum, hora: ahora }
     setSesion(prev => ({
       ...prev,
-      registros: [...prev.registros, { id: ahora, monto: montoNum, hora: ahora }],
+      registros: [...prev.registros, nuevoViaje],
       tripEndTime: prev.tripEndTime + prev.tiempoPorViajeMs,
     }))
+    // Agregar el viaje a la meta activa (si existe)
+    const metaActiva = cargar(META_ACTIVA_KEY, null)
+    if (metaActiva) {
+      localStorage.setItem(META_ACTIVA_KEY, JSON.stringify({
+        ...metaActiva,
+        registros: [...metaActiva.registros, nuevoViaje],
+      }))
+    }
     setMonto('')
     setMostrarModal(false)
   }
 
   const guardarEdicion = (id) => {
-    setSesion(prev => ({ ...prev, registros: prev.registros.map(r => r.id === id ? { ...r, monto: parseFloat(montoEdicion) || 0 } : r) }))
+    const montoNuevo = parseFloat(montoEdicion) || 0
+    setSesion(prev => ({ ...prev, registros: prev.registros.map(r => r.id === id ? { ...r, monto: montoNuevo } : r) }))
+    // Actualizar también en la meta activa
+    const metaActiva = cargar(META_ACTIVA_KEY, null)
+    if (metaActiva) {
+      localStorage.setItem(META_ACTIVA_KEY, JSON.stringify({
+        ...metaActiva,
+        registros: metaActiva.registros.map(r => r.id === id ? { ...r, monto: montoNuevo } : r),
+      }))
+    }
     setEditandoId(null)
   }
 
@@ -117,16 +130,10 @@ export default function TrabajoEvento() {
 
   const terminarJornada = () => {
     if (sesion && viajesRealizados > 0) {
-      const id = Date.now()
-      const entrada = { id, fecha: sesion.startTime, horaInicio: sesion.horaInicio, horaFin: sesion.horaFin, meta: sesion.meta, viajesRealizados, totalGanado, registros: sesion.registros }
+      const entrada = { id: Date.now(), fecha: sesion.startTime, horaInicio: sesion.horaInicio, horaFin: sesion.horaFin, meta: sesion.meta, viajesRealizados, totalGanado, registros: sesion.registros }
       const nuevo = [entrada, ...historial]
       setHistorial(nuevo)
       localStorage.setItem(HISTORIAL_KEY, JSON.stringify(nuevo))
-
-      // Guarda también en el historial de Meta
-      const metaHistorial = cargar(META_HISTORIAL_KEY, [])
-      const metaEntrada = { id, fecha: sesion.startTime, viajesRealizados, totalGanado, registros: sesion.registros }
-      localStorage.setItem(META_HISTORIAL_KEY, JSON.stringify([metaEntrada, ...metaHistorial]))
     }
     setSesion(null)
     setForm({ meta: '', horaInicio: '', horaFin: '' })
