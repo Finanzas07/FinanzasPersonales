@@ -69,6 +69,65 @@
   font-weight: 600;
 }
 
+/* Ítem padre con hijos */
+.sidebar-link-parent {
+  width: 100%;
+  cursor: pointer;
+  justify-content: flex-start;
+}
+
+.sidebar-chevron {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sidebar-chevron.rotado {
+  transform: rotate(180deg);
+}
+
+/* Sub-ítems */
+.sidebar-children {
+  display: flex;
+  flex-direction: column;
+  padding-left: 36px;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+
+.sidebar-child-link {
+  display: flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 8px;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.82rem;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+}
+
+.sidebar-child-link::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 8px;
+  opacity: 0.5;
+}
+
+.sidebar-child-link:hover {
+  background: #f3f4f6;
+  color: #1e3a5f;
+}
+
+.sidebar-child-link.active {
+  background: #e8f0fe;
+  color: #1a56db;
+  font-weight: 600;
+}
+
 /* --- Responsive móvil --- */
 @media (max-width: 768px) {
   .sidebar {
