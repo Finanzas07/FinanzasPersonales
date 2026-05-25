@@ -5,6 +5,7 @@ import './App.css'
 import Sidebar from './components/Sidebar'
 import TrabajoEvento from './views/TrabajoEvento'
 import TrabajoMeta from './views/TrabajoMeta'
+import TrabajoGanancias from './views/TrabajoGanancias'
 import VistaGeneral from './views/VistaGeneral'
 import Placeholder from './views/Placeholder'
 
@@ -40,6 +41,7 @@ function App() {
             <Routes>
               <Route path="/trabajo/evento" element={<TrabajoEvento />} />
               <Route path="/trabajo/meta" element={<TrabajoMeta />} />
+              <Route path="/trabajo/ganancias" element={<TrabajoGanancias />} />
               <Route path="/" element={<VistaGeneral moneda="MXN" simbolo="$" />} />
               <Route path="/transacciones" element={<Placeholder titulo="Transacciones" />} />
               <Route path="/programadas" element={<Placeholder titulo="Transacciones programadas" />} />

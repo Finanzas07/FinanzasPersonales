@@ -14,6 +14,7 @@ const NAV_ITEMS = [
     children: [
       { to: '/trabajo/evento', label: 'Evento' },
       { to: '/trabajo/meta', label: 'Meta' },
+      { to: '/trabajo/ganancias', label: 'Ganancias' },
     ],
   },
   { to: '/', label: 'Vista General', icon: LayoutDashboard },

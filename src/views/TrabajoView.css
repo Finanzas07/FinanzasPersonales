@@ -752,3 +752,146 @@
 .trabajo-jornada-btn-delete:hover {
   background: #b91c1c;
 }
+
+/* ── GANANCIAS ── */
+.gan-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gan-card-titulo {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.gan-total-valor {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #16a34a;
+  line-height: 1;
+}
+
+.gan-total-sub {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -6px;
+}
+
+.gan-badge-activo {
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.gan-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.gan-fila-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.gan-fila-valor {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.gan-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #f9fafb;
+  transition: border-color 0.15s;
+}
+
+.gan-input-wrap:focus-within {
+  border-color: #1a56db;
+  background: #fff;
+}
+
+.gan-peso {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.gan-input {
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  width: 100px;
+  text-align: right;
+}
+
+.gan-diferencia {
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.gan-diferencia.positivo {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.gan-diferencia.negativo {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.gan-card-neta {
+  border-color: #1a56db;
+  border-width: 2px;
+}
+
+.gan-card-neta.perdida {
+  border-color: #dc2626;
+}
+
+.gan-neta-valor {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1a56db;
+  line-height: 1;
+}
+
+.gan-neta-valor.negativo {
+  color: #dc2626;
+}
+
+.gan-neta-hint {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin: 0;
+}
